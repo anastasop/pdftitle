@@ -118,12 +118,18 @@ func title(fname string) (string, error) {
 // panics in one place.
 func phrasesOfDoc(docgen func() (*pdf.Reader, error)) (phrases []*phrase, rerr error) {
 	defer func() {
-		if err := recover(); err != nil {
+		if val := recover(); val != nil {
 			// do not send garbage to output
-			if i := strings.Index(err.(error).Error(), "malformed hex string"); i >= 0 {
+			var errStr string
+			if err, ok := val.(error); ok {
+				errStr = err.Error()
+			} else {
+				errStr = fmt.Sprint(val)
+			}
+			if i := strings.Index(errStr, "malformed hex string"); i >= 0 {
 				rerr = errors.New("reader paniced: malformed hex string")
 			} else {
-				rerr = fmt.Errorf("reader paniced: %v", err)
+				rerr = fmt.Errorf("reader paniced: %s", errStr)
 			}
 		}
 	}()
